@@ -68,17 +68,17 @@ create_rainy_plot<-function(D, sun_par){
   month_list = c("January","Feburary","March","April","May","June","July","August","September","October","November","December")
   rain_period<-find_rainy_periods(D$value, sun_par)
   rain_inds <-  rain_period$rain_start:(rain_period$rain_start+rain_period$most_sequential_rain_days)
-  D.rain.seg<-D[rain_inds,]
+  D.rain.seg<-D[rain_inds[-length(rain_inds)],]
   break_steps<-round((range(D.rain.seg$value)/5)[2])
   break_seqs<-seq(round(min(D.rain.seg$value)), max(D.rain.seg$value), break_steps)
   break_seqs[length(break_seqs)]<-max(D.rain.seg$value)
-  break_labs <-str_c(break_seqs[2:(length(break_seqs)-1)]," to ",break_seqs[3:length(break_seqs)], " mm")
+  break_labs <-str_c(break_seqs[1:(length(break_seqs)-1)]," to ",break_seqs[2:length(break_seqs)], " mm")
+  colors<-brewer.pal(length(break_labs)+1, name="Greys")[-1]
   if(min(D.rain.seg$value)==0){
     break_seqs<-c(break_seqs[1], 1, break_seqs[2:length(break_seqs)])
     break_labs <- c("0 mm",str_c(break_seqs[2:(length(break_seqs)-1)]," to ",break_seqs[3:length(break_seqs)], " mm"))
+    colors<-brewer.pal(length(break_labs)+1, name="Greys")
   }
-  
-  
   
   titles<-str_c("Longest period of rain without ", sun_par+1, " consecutive days of sun")
   if(sun_par==0){
@@ -89,7 +89,7 @@ create_rainy_plot<-function(D, sun_par){
                          val_lev=cut(value,breaks=break_seqs, include.lowest = TRUE))%>%
     mutate(month=factor(month, levels=unique((month)[rev(order(date))])))%>%ggplot(aes(y = month, x = day)) +
     geom_tile(aes(fill = val_lev), color = "#808080") + 
-    scale_fill_brewer(palette="Greys", name="Amount of rain", labels=break_labs)+
+    scale_fill_manual(values=colors, name="Amount of rain", labels=break_labs)+
   theme_scatter()+labs(title=titles, x="Day", y="Month")+coord_fixed(expand=TRUE)
   
 }
@@ -165,6 +165,6 @@ D.rain.clean%>%filter(date>ymd("1939-01-01"))%>%mutate(date_mo=ymd(str_c(str_sub
        subtitle="Doesn't look like much BUT A LINE IT MEANS IT RAINED MORE THAN HALF THE DAYS THAT MONTH :( :( :(")
 
 
-create_rainy_plot(D.rain.clean, 3)
+create_rainy_plot(D.rain.clean, 1)
 
 
